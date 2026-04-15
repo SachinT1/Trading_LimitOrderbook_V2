@@ -35,9 +35,10 @@ public:
     
     void* operator new(std::size_t size);
     void* operator new(std::size_t size, void* ptr);
-    //buggg
+    
+    //by default the sized destructor is considered. 
     void operator delete(void* ptr, std::size_t size);
-    void operator delete(void* ptr); // Global delete overload
+    void operator delete(void* ptr); 
     
     OrderId GetOrderId() const { return orderId_; }
     Side GetSide() const { return side_; }
