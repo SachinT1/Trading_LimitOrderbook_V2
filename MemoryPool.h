@@ -67,9 +67,9 @@ public:
 struct OrderDeleter {
     void operator()(Order* p) const {
         if (p) {
+            delete p;
+            //calling delete on an order pointer will invoke the delete defined in orderbook.cpp
             
-            p->~Order();
-            Order::GetPool().deallocate(p);
         }
     }
 };

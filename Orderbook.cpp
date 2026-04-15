@@ -16,26 +16,34 @@ OrderMemoryPool& Order::GetPool()
 
 void* Order::operator new(std::size_t size)
 {
-    if (size != sizeof(Order)) { return ::operator new(size); }
+	//if this isnt about an order, use the global new 
+    if (size != sizeof(Order)) { 
+		return ::operator new(size); 
+	}
     return GetPool().allocate();
 }
 
 void* Order::operator new(std::size_t size, void* ptr)
 {
-    // It simply returns the memory address it was given. No actual allocation is done here.
+    
+	//placement new
     return ptr;
 }
 
 void Order::operator delete(void* ptr, std::size_t size)
 {
-    if (size != sizeof(Order)) { ::operator delete(ptr); }
-    // Deallocation logic is handled by the OrderDeleter in shared_ptr
+    if (size != sizeof(Order)) { 
+		::operator delete(ptr);
+		return;
+	}
+	GetPool().deallocate(ptr);
 }
 
 void Order::operator delete(void* ptr)
 {
-    // Fallback delete
-    ::operator delete(ptr);
+    if(ptr){
+		GetPool().deallocate(ptr);
+	}
 }
 
 OrderPointer Order::CreateOrder(OrderType orderType, OrderId orderId, Side side, Price price, Quantity quantity)
