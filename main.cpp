@@ -13,13 +13,14 @@ int main()
     auto st = Clock::now();
 
     Orderbook orderbook;
+    orderbook.StartBook();
 
     auto t1 = Clock::now();
     auto duration = t1 - st;
     long long microseconds = std::chrono::duration_cast<std::chrono::microseconds>(duration).count();
     std::cout << "Orderbook Initialization Time: " << microseconds << " μs" << std::endl;
 
-    const int NUM_TRIALS = 10000;
+    const int NUM_TRIALS = 1000000;
     std::vector<nanoseconds> latencies;
     latencies.reserve(NUM_TRIALS);
 
@@ -59,25 +60,6 @@ int main()
 
 
 
-
-
-
-
-
-    /*
-    auto trd = orderbook.AddOrder(Order::CreateOrder(OrderType::GoodTillCancel,OrderId(1001),Side::Buy,Price(1000),Quantity(50)));
-    for(auto it:trd){
-        std::cout<<"trd1"<<std::endl;
-        auto trd_asks = it.GetAskTrade();
-        auto trd_bids = it.GetBidTrade();
-        std::cout<<trd_asks.orderId_<<" "<<trd_asks.price_<<" "<<trd_asks.quantity_<<std::endl;
-        std::cout<<trd_bids.orderId_<<" "<<trd_bids.price_<<" "<<trd_bids.quantity_<<std::endl;  
-    }
-    std::cout<<orderbook.Size()<<std::endl;
-    
-    
-    */
-    
-    
     return 0;
+
 }

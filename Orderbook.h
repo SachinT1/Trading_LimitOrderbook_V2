@@ -12,6 +12,13 @@
 #include "OrderbookLevelInfos.h"
 #include "Trade.h"
 
+
+enum class Action{
+        Add,
+        Remove,
+        Match,
+};
+
 class Orderbook
 {
 private:
@@ -24,18 +31,13 @@ private:
 
     struct LevelData
     {
-        Quantity quantity_{ };
-        Quantity count_{ };
-
-        enum class Action
-        {
-            Add,
-            Remove,
-            Match,
-        };
+        Quantity quantity_{0};
+        Quantity count_{0};
     };
 
-    std::unordered_map<Price, LevelData> data_;
+    
+    std::unordered_map<Price, LevelData> askdata_;
+    std::unordered_map<Price, LevelData> biddata_;
     std::map<Price, OrderPointers, std::greater<Price>> bids_;
     std::map<Price, OrderPointers, std::less<Price>> asks_;
     std::unordered_map<OrderId, OrderEntry> orders_;
@@ -43,16 +45,17 @@ private:
     std::thread ordersPruneThread_;
     std::condition_variable shutdownConditionVariable_;
     std::atomic<bool> shutdown_{ false };
+    std::vector<OrderId>gfdorders;
 
     void PruneGoodForDayOrders();
-
+    
     void CancelOrders(OrderIds orderIds);
     void CancelOrderInternal(OrderId orderId);
 
     void OnOrderCancelled(OrderPointer order);
     void OnOrderAdded(OrderPointer order);
-    void OnOrderMatched(Price price, Quantity quantity, bool isFullyFilled);
-    void UpdateLevelData(Price price, Quantity quantity, LevelData::Action action);
+    void OnOrderMatched(Price price, Quantity quantity, bool isFullyFilled,Side side);
+    void UpdateLevelData(Price price, Quantity quantity, Action action,Side side);
 
     bool CanFullyFill(Side side, Price price, Quantity quantity) const;
     bool CanMatch(Side side, Price price) const;
@@ -67,11 +70,15 @@ public:
     void operator=(Orderbook&&) = delete;
     std::thread& getprune();
     ~Orderbook();
+    void StartBook();
 
+    Trades AddOrderInternal(OrderPointer order);
     Trades AddOrder(OrderPointer order);
+    
     void CancelOrder(OrderId orderId);
     Trades ModifyOrder(OrderModify order);
 
     std::size_t Size() const;
     OrderbookLevelInfos GetOrderInfos() const;
+    
 };

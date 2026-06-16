@@ -13,7 +13,7 @@
 class OrderMemoryPool;
 template<typename T> class shared_ptr;
 class Order;
-using OrderPointer = std::shared_ptr<Order>;
+using OrderPointer = Order*;
 
 
 class Order
@@ -55,6 +55,9 @@ public:
 
         remainingQuantity_ -= quantity;
     }
+    void setQuantity(Quantity Q){
+        remainingQuantity_ = Q;
+    }
     void ToGoodTillCancel(Price price) 
     { 
         if (GetOrderType() != OrderType::Market)
@@ -78,5 +81,3 @@ public:
     static OrderMemoryPool& GetPool();
 };
 
-//using OrderPointer = std::shared_ptr<Order>;
-//using OrderPointers = std::list<OrderPointer>;

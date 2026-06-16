@@ -1,6 +1,8 @@
 #pragma once
 
-#include "Order.h"
+
+
+class Order;
 
 class OrderModify
 {
@@ -17,11 +19,8 @@ public:
     Side GetSide() const { return side_; }
     Quantity GetQuantity() const { return quantity_; }
 
-    OrderPointer ToOrderPointer(OrderType type) const
-    {
-        return std::make_shared<Order>(type, GetOrderId(), GetSide(), GetPrice(), GetQuantity());
-    }
-
+    OrderPointer ToOrderPointer(OrderType type) const;
+    
 private:
     OrderId orderId_;
     Price price_;
