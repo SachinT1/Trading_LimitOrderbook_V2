@@ -1,8 +1,0 @@
-{
-	"InstallScripts" : 
-	[
-		"/Users/sachintrivedi/HFT_ProjectV2/build/cmake_install.cmake",
-		"/Users/sachintrivedi/HFT_ProjectV2/build/_deps/fmt_repo-build/cmake_install.cmake"
-	],
-	"Parallel" : false
-}
