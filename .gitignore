@@ -1,0 +1,4 @@
+# .gitgnore
+
+build/
+.vscode/

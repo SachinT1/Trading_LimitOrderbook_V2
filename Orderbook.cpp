@@ -7,69 +7,6 @@
 #include <chrono>
 #include <ctime>
 #include <iostream>
-OrderMemoryPool &Order::GetPool()
-{
-	// The pool is initialized only ONCE, the first time this function is called.
-
-	static OrderMemoryPool pool(1000000);
-	return pool;
-}
-
-Order *OrderModify::ToOrderPointer(OrderType type) const
-{
-	void *raw_block = Order::GetPool().allocate();
-	return new (raw_block) Order(type, orderId_, side_, price_, quantity_);
-}
-
-void *Order::operator new(std::size_t size)
-{
-	// if this isnt about an order, use the global new
-	if (size != sizeof(Order))
-	{
-		return ::operator new(size);
-	}
-	return GetPool().allocate();
-}
-
-void *Order::operator new(std::size_t size, void *ptr)
-{
-	// placement new
-	return ptr;
-}
-
-void Order::operator delete(void *ptr, std::size_t size)
-{
-	if (size != sizeof(Order))
-	{
-		::operator delete(ptr);
-		return;
-	}
-	GetPool().deallocate(ptr);
-}
-
-void Order::operator delete(void *ptr)
-{
-	if (ptr)
-	{
-		GetPool().deallocate(ptr);
-	}
-}
-
-OrderPointer Order::CreateOrder(OrderType orderType, OrderId orderId, Side side, Price price, Quantity quantity)
-{
-
-	// Step 1: Allocate raw memory from the pool
-	void *raw_block = Order::GetPool().allocate();
-
-	// Step 2: Use placement new to construct the Order object
-	Order *raw_order_ptr = new (raw_block) Order(orderType, orderId, side, price, quantity);
-
-	// Step 3: Create a shared_ptr with the custom deleter
-	// The OrderDeleter is defined in MemoryPool.h
-
-	// Step 4: Return the final pointer
-	return raw_order_ptr;
-}
 
 void Orderbook::PruneGoodForDayOrders()
 {

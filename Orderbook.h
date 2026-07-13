@@ -41,11 +41,13 @@ private:
     std::map<Price, OrderPointers, std::greater<Price>> bids_;
     std::map<Price, OrderPointers, std::less<Price>> asks_;
     std::unordered_map<OrderId, OrderEntry> orders_;
+    std::vector<OrderId>gfdorders;
+    
     mutable std::mutex ordersMutex_;
     std::thread ordersPruneThread_;
     std::condition_variable shutdownConditionVariable_;
     std::atomic<bool> shutdown_{ false };
-    std::vector<OrderId>gfdorders;
+    
 
     void PruneGoodForDayOrders();
     

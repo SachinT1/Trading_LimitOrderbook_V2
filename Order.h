@@ -2,18 +2,15 @@
 
 #include <list>
 #include <exception>
-#include <fmt/core.h>
-
 #include "OrderType.h"
 #include "Side.h"
 #include "Usings.h"
+#include "MemoryPool.h"
 #include "Constants.h"
+#include <format>
 
 
-class OrderMemoryPool;
-template<typename T> class shared_ptr;
-class Order;
-using OrderPointer = Order*;
+
 
 
 class Order
@@ -51,7 +48,7 @@ public:
     void Fill(Quantity quantity)
     {
         if (quantity > GetRemainingQuantity())
-            throw std::logic_error(fmt::format("Order ({}) cannot be filled for more than its remaining quantity.", GetOrderId()));
+            throw std::logic_error(std::format("Order ({}) cannot be filled for more than its remaining quantity.", GetOrderId()));
 
         remainingQuantity_ -= quantity;
     }
@@ -61,12 +58,11 @@ public:
     void ToGoodTillCancel(Price price) 
     { 
         if (GetOrderType() != OrderType::Market)
-            throw std::logic_error(fmt::format("Order ({}) cannot have its price adjusted, only market orders can.", GetOrderId()));
+            throw std::logic_error(std::format("Order ({}) cannot have its price adjusted, only market orders can.", GetOrderId()));
 
         price_ = price;
         orderType_ = OrderType::GoodTillCancel;
     }
-    
     static OrderPointer CreateOrder(OrderType orderType, OrderId orderId, Side side, Price price, Quantity quantity);
 private:
     OrderType orderType_;
@@ -77,7 +73,40 @@ private:
     Quantity remainingQuantity_;
 
 public:
-    static OrderMemoryPool pool;
-    static OrderMemoryPool& GetPool();
+    static MemoryPool orderpool;
+    static MemoryPool& GetPool(){
+        return orderpool;
+    }
 };
+
+inline MemoryPool Order::orderpool{1000000,sizeof(Order)};
+
+inline void* Order::operator new(std::size_t size){
+    if(size != sizeof(Order)){
+        return ::operator new(size);
+    }
+    return GetPool().allocate();
+}
+
+inline void* Order::operator new(std::size_t size,void* ptr){
+    return ptr;
+}
+
+inline void Order::operator delete(void* ptr,std::size_t size){
+    if(size != sizeof(Order)){
+        ::operator delete(ptr);
+        return;
+    }
+    GetPool().deallocate(ptr);
+}
+
+inline void Order::operator delete(void* ptr){
+    if(ptr){
+        GetPool().deallocate(ptr);
+    }
+}
+
+inline OrderPointer Order::CreateOrder(OrderType orderType, OrderId orderId, Side side, Price price, Quantity quantity){
+    return new Order(orderType,orderId,side,price,quantity);
+}
 

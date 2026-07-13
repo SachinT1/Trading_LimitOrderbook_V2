@@ -1,42 +1,43 @@
 #pragma once
-#include "Order.h"
+
 #include <vector>
 #include <cstddef>
-#include <iostream>
+#include <algorithm>
 #include <new>
 
 
-class OrderMemoryPool{
+class MemoryPool{
 private:
-    union Block{
-        char data[sizeof(Order)];
-        Block* next;
+    struct Node{
+        Node* next;
     };
+    const std::size_t block_size_;
+    Node* free_list_head = nullptr;
+    std::vector<char>raw_memory_;
 
-    const std::size_t block_size_ = sizeof(Order);
-    Block* free_list_head_ = nullptr;
-    std::vector<char> raw_memory_;
-    
 public:
-    OrderMemoryPool(std::size_t num_blocks): raw_memory_(num_blocks * block_size_){
-        char* current_char_ptr = raw_memory_.data(); 
-        free_list_head_ = reinterpret_cast<Block*>(current_char_ptr); 
-        for (std::size_t i = 0; i < num_blocks - 1; ++i) {
-            
-            Block* current_block = reinterpret_cast<Block*>(current_char_ptr);
-            current_char_ptr += block_size_; 
-            current_block->next = reinterpret_cast<Block*>(current_char_ptr);
+    explicit MemoryPool(std::size_t num_blocks,std::size_t req_block_size)
+        :block_size_(std::max(req_block_size,sizeof(Node))),
+        raw_memory_(block_size_*num_blocks)
+    {
+        char* currptr = raw_memory_.data();
+        free_list_head = reinterpret_cast<Node*>(currptr);
+
+        for(std::size_t i = 0;i<num_blocks-1;++i){
+            Node* curr_node = reinterpret_cast<Node*>(currptr);
+            currptr += block_size_;
+            curr_node->next = reinterpret_cast<Node*>(currptr);
         }
-        Block* last_block = reinterpret_cast<Block*>(current_char_ptr);
-        last_block->next = nullptr;
+        Node* last_node = reinterpret_cast<Node*>(currptr);
+        last_node->next = nullptr;
     }
 
     void* allocate(){
-        if(!free_list_head_){
+        if(!free_list_head){
             throw std::bad_alloc();
         }
-        void* block = free_list_head_;
-        free_list_head_=free_list_head_->next;
+        void* block = free_list_head;
+        free_list_head = free_list_head->next;
         return block;
     }
 
@@ -44,20 +45,14 @@ public:
         if(!ptr){
             return;
         }
-        Block* block = reinterpret_cast<Block*>(ptr);
-        block->next = free_list_head_;
-        free_list_head_= block;
+        Node* node = reinterpret_cast<Node*>(ptr);
+        node->next = free_list_head;
+        free_list_head = node;
     }
 
-    OrderMemoryPool(const OrderMemoryPool&) = delete;
-    OrderMemoryPool& operator=(const OrderMemoryPool&) = delete;
-    //to invalidate copy operations on this object
+    MemoryPool(const MemoryPool& other) = delete;
+    MemoryPool& operator= (const MemoryPool& other) = delete;
 };
 
 
 
-using OrderPointer = Order* ;
-//OrderDeleter should not be written in shared_ptr<> defn
-//std::shared_ptr uses a runtime constructor argument std::unique_ptr uses a compile-time deleter template argument
-
-using OrderPointers = std::list<OrderPointer>;

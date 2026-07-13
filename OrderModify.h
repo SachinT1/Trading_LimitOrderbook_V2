@@ -19,7 +19,11 @@ public:
     Side GetSide() const { return side_; }
     Quantity GetQuantity() const { return quantity_; }
 
-    OrderPointer ToOrderPointer(OrderType type) const;
+    OrderPointer ToOrderPointer(OrderType type)const
+    {
+        void* raw_block = Order::GetPool().allocate();
+        return new (raw_block)Order(type, orderId_, side_, price_, quantity_);
+    }
     
 private:
     OrderId orderId_;
